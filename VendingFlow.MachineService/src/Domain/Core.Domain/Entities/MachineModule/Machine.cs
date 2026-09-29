@@ -1,6 +1,6 @@
 namespace MachineService.Domain.Entities.MachineModule;
 
-public sealed class Machine
+public class Machine
 {
     public Guid Id { get; set; }
     public string MachineCode { get; set; } = "";

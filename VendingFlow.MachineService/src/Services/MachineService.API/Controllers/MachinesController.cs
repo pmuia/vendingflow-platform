@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MachineService.API.Controllers;
 
-public sealed class MachinesController(ILogger<MachinesController> logger) : ApiBaseController
+public class MachinesController(ILogger<MachinesController> logger) : ApiBaseController
 {
     [HttpPost]
     [Route("api/machines")]

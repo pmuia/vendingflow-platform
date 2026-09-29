@@ -1,0 +1,9 @@
+@InventoryService_API_HostAddress = http://localhost:5120
+
+POST {{InventoryService_API_HostAddress}}/api/inventory
+Content-Type: application/json
+
+{
+  "service": "getProducts",
+  "data": {}
+}

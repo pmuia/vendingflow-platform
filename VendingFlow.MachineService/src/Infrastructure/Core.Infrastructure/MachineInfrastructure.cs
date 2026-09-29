@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MachineService.Infrastructure;
 
-public sealed class MachineDbContext(DbContextOptions<MachineDbContext> options) : DbContext(options)
+public class MachineDbContext(DbContextOptions<MachineDbContext> options) : DbContext(options)
 {
     public DbSet<Machine> Machines => Set<Machine>();
 
@@ -24,7 +24,7 @@ public sealed class MachineDbContext(DbContextOptions<MachineDbContext> options)
     }
 }
 
-public sealed class MachineDbContextFactory : IDesignTimeDbContextFactory<MachineDbContext>
+public class MachineDbContextFactory : IDesignTimeDbContextFactory<MachineDbContext>
 {
     public MachineDbContext CreateDbContext(string[] args)
     {
@@ -36,7 +36,7 @@ public sealed class MachineDbContextFactory : IDesignTimeDbContextFactory<Machin
     }
 }
 
-public sealed class MachineRepository(MachineDbContext db) : IMachineRepository
+public class MachineRepository(MachineDbContext db) : IMachineRepository
 {
     public Task<Machine?> GetByIdAsync(Guid id, CancellationToken ct) => db.Machines.FirstOrDefaultAsync(m => m.Id == id, ct);
     public Task<Machine?> GetByCodeAsync(string code, CancellationToken ct) => db.Machines.FirstOrDefaultAsync(m => m.MachineCode == code, ct);
