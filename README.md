@@ -52,12 +52,22 @@ Run services in separate terminals:
 
 ```bash
 dotnet run --project VendingFlow.MachineService/src/MachineService.Api --urls http://localhost:5001
-dotnet run --project VendingFlow.InventoryService/src/InventoryService.Api --urls http://localhost:5002
+dotnet run --project VendingFlow.InventoryService/src/Services/InventoryService.API --urls http://localhost:5002
 dotnet run --project VendingFlow.PaymentService/src/PaymentService.Api --urls http://localhost:5003
 dotnet run --project VendingFlow.ApiGateway --urls http://localhost:5000
 dotnet run --project VendingFlow.MachineSimulator
 cd VendingFlow.TelemetryService && mvn spring-boot:run
 cd VendingFlow.Web && npm install && npm run dev
+```
+
+Inventory Service follows the same generic command endpoint style as the local approval workflow service. Use `POST /api/inventory` with a `service` name and `data` payload:
+
+```json
+{ "service": "getProducts", "data": {} }
+```
+
+```json
+{ "service": "reserveProduct", "data": { "machineId": "VM-001", "productId": "PRODUCT_GUID" } }
 ```
 
 The .NET services use `EnsureCreated` for the POC seed path so the demo can reset quickly. Telemetry uses Flyway migration `V1__telemetry.sql`.

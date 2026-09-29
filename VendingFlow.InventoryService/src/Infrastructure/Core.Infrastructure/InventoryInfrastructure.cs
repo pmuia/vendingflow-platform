@@ -1,8 +1,10 @@
 using System.Text;
 using System.Text.Json;
-using InventoryService.Application;
-using InventoryService.Domain;
+using InventoryService.Application.Interfaces;
+using InventoryService.Application.Services.InventoryManagement.Models;
+using InventoryService.Domain.Entities.InventoryModule;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -39,6 +41,18 @@ public sealed class InventoryDbContext(DbContextOptions<InventoryDbContext> opti
             e.Property(t => t.Amount).HasPrecision(12, 2);
             e.Property(t => t.Status).HasConversion<string>().HasMaxLength(32);
         });
+    }
+}
+
+public sealed class InventoryDbContextFactory : IDesignTimeDbContextFactory<InventoryDbContext>
+{
+    public InventoryDbContext CreateDbContext(string[] args)
+    {
+        var options = new DbContextOptionsBuilder<InventoryDbContext>()
+            .UseNpgsql("Host=localhost;Port=5432;Database=InventoryServicedb;Username=postgres;Password=H@rd2Cr@k!!pmuia;")
+            .Options;
+
+        return new InventoryDbContext(options);
     }
 }
 
@@ -180,7 +194,7 @@ public static class InventorySeed
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
-        await db.Database.EnsureCreatedAsync();
+        await db.Database.MigrateAsync();
         if (await db.Products.AnyAsync()) return;
 
         var names = new[] { "Orange Juice", "Mango Juice", "Apple Juice", "Pineapple Juice", "Passion Juice", "Guava Juice", "Watermelon Juice", "Tamarind Juice", "Lemonade", "Ginger Lime Juice", "Carrot Orange Juice", "Beetroot Berry Juice", "Mixed Berry Juice", "Grape Juice", "Peach Juice", "Kiwi Juice", "Cranberry Juice", "Coconut Water", "Strawberry Juice", "Pomegranate Juice" };

@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MachineService.Application\MachineService.Application.csproj" />
-    <ProjectReference Include="..\MachineService.Infrastructure\MachineService.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\Core.Infrastructure\Core.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Management\Core.Management\Core.Management.csproj" />
   </ItemGroup>
 
 </Project>

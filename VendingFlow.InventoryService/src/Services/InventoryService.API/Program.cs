@@ -1,6 +1,5 @@
-using MediatR;
-using PaymentService.Application;
-using PaymentService.Infrastructure;
+using InventoryService.Application;
+using InventoryService.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,14 +26,12 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-await PaymentSeed.EnsureCreatedAsync(app.Services);
+await InventorySeed.EnsureSeededAsync(app.Services);
 
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseCors("AllowFrontend");
 app.MapHealthChecks("/health");
 app.MapControllers();
-
-app.MapGet("/api/payments/recent", (IMediator mediator, CancellationToken ct) => mediator.Send(new GetRecentPaymentsQuery(), ct));
 
 app.Run();
