@@ -1,6 +1,7 @@
-using MachineService.Application;
-using MachineService.Domain;
+using MachineService.Application.Interfaces;
+using MachineService.Domain.Entities.MachineModule;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MachineService.Infrastructure;
@@ -23,6 +24,18 @@ public sealed class MachineDbContext(DbContextOptions<MachineDbContext> options)
     }
 }
 
+public sealed class MachineDbContextFactory : IDesignTimeDbContextFactory<MachineDbContext>
+{
+    public MachineDbContext CreateDbContext(string[] args)
+    {
+        var options = new DbContextOptionsBuilder<MachineDbContext>()
+            .UseNpgsql("Host=localhost;Port=5432;Database=MachineServicedb;Username=postgres;Password=H@rd2Cr@k!!pmuia;")
+            .Options;
+
+        return new MachineDbContext(options);
+    }
+}
+
 public sealed class MachineRepository(MachineDbContext db) : IMachineRepository
 {
     public Task<Machine?> GetByIdAsync(Guid id, CancellationToken ct) => db.Machines.FirstOrDefaultAsync(m => m.Id == id, ct);
@@ -38,7 +51,7 @@ public static class MachineSeed
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<MachineDbContext>();
-        await db.Database.EnsureCreatedAsync();
+        await db.Database.MigrateAsync();
         if (await db.Machines.AnyAsync()) return;
 
         var now = DateTimeOffset.UtcNow;

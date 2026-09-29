@@ -1,12 +1,4 @@
-namespace MachineService.Domain;
-
-public enum MachineStatus
-{
-    ONLINE,
-    OFFLINE,
-    DEGRADED,
-    MAINTENANCE
-}
+namespace MachineService.Domain.Entities.MachineModule;
 
 public sealed class Machine
 {
