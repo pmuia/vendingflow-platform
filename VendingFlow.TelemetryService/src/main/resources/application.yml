@@ -1,22 +1,28 @@
 server:
-  port: 8084
+  port: ${PORT:8084}
 spring:
+  application:
+    name: vendingflow-telemetry-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/telemetry_db
-    username: vendingflow
-    password: vendingflow
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/telemetry_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:H@rd2Cr@k!!pmuia}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: vendingflow
-    password: vendingflow
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:vendingflow}
+    password: ${SPRING_RABBITMQ_PASSWORD:vendingflow}
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
 management:
   endpoints:
     web:
@@ -24,7 +30,7 @@ management:
         include: health,info
 vendingflow:
   rabbit:
-    exchange: vendingflow.events
+    exchange: ${VENDINGFLOW_RABBIT_EXCHANGE:vendingflow.events}
   heartbeat:
-    degraded-after-seconds: 30
-    offline-after-seconds: 60
+    degraded-after-seconds: ${VENDINGFLOW_HEARTBEAT_DEGRADED_AFTER_SECONDS:30}
+    offline-after-seconds: ${VENDINGFLOW_HEARTBEAT_OFFLINE_AFTER_SECONDS:60}

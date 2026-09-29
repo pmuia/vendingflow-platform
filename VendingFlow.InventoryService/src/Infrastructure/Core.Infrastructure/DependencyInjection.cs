@@ -1,9 +1,8 @@
-using InventoryService.Application;
+using System.Reflection;
 using InventoryService.Application.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using InventoryService.Infrastructure.Database;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System.Reflection;
 
 namespace InventoryService.Infrastructure;
 
@@ -26,10 +25,10 @@ public static class DependencyInjection
                 npgsql.MigrationsHistoryTable("__InventoryDbContextMigrationsHistory", "inventoryservice");
             }));
 
-        services.AddMemoryCache();
         services.Configure<RabbitOptions>(configuration.GetSection("RabbitMq"));
         services.AddScoped<IInventoryRepository, InventoryRepository>();
-        services.AddScoped<IEventBus, RabbitEventBus>();
+        services.AddScoped<IConnection>(_ => new Connection(dbConn));
+        services.AddSingleton<IEventBus, RabbitEventBus>();
         services.AddHostedService<InventoryEventConsumer>();
         return services;
     }

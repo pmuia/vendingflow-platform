@@ -7,7 +7,7 @@ using MediatR;
 
 namespace InventoryService.Application.Common.Services;
 
-public sealed class CommandFactory : ICommandFactory
+public class CommandFactory : ICommandFactory
 {
     private readonly IReadOnlyDictionary<string, Type> _commands;
 

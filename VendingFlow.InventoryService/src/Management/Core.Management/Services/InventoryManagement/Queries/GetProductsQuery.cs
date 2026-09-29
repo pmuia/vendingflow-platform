@@ -7,13 +7,13 @@ using MediatR;
 namespace InventoryService.Application.Services.InventoryManagement.Queries;
 
 [CommandName("getProducts")]
-public sealed record GetProductsQuery : IRequest<ResponseModel>;
+public record GetProductsQuery : IRequest<ResponseModel>;
 
-public sealed class GetProductsQueryHandler(IInventoryRepository repository) : IRequestHandler<GetProductsQuery, ResponseModel>
+public class GetProductsQueryHandler(IInventoryRepository repository) : IRequestHandler<GetProductsQuery, ResponseModel>
 {
     public async Task<ResponseModel> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
-        var products = (await repository.GetProductsAsync(cancellationToken)).Select(p => p.ToDto()).ToList();
-        return ResponseModel.Ok(products);
+        var products = await repository.GetProductsAsync(cancellationToken);
+        return ResponseModel.Ok(products.Select(product => product.ToDto()).ToList());
     }
 }

@@ -1,10 +1,11 @@
 package com.vendingflow.telemetry.repository;
 
-import com.vendingflow.telemetry.domain.MachineTelemetry;
 import java.util.List;
-import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface MachineTelemetryRepository extends JpaRepository<MachineTelemetry, UUID> {
+import com.vendingflow.telemetry.domain.model.MachineTelemetry;
+
+public interface MachineTelemetryRepository extends JpaRepository<MachineTelemetry, Long> {
   List<MachineTelemetry> findTop50ByMachineIdOrderByRecordedAtDesc(String machineId);
 }

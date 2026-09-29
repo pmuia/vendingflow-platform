@@ -1,7 +1,8 @@
-using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using InventoryService.Application.Common.Interfaces;
 using InventoryService.Application.Common.Services;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace InventoryService.Application;
 
@@ -11,7 +12,7 @@ public static class DependencyInjection
     {
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
         services.AddMediatR(Assembly.GetExecutingAssembly());
-        services.AddSingleton<ICommandFactory, CommandFactory>();
+        services.AddScoped<ICommandFactory, CommandFactory>();
         return services;
     }
 }

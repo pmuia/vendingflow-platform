@@ -8,18 +8,18 @@ using MediatR;
 namespace InventoryService.Application.Services.InventoryManagement.Commands;
 
 [CommandName("reserveProduct")]
-public sealed record ReserveProductCommand(string MachineId, Guid ProductId) : IRequest<ResponseModel>;
+public record ReserveProductCommand(string MachineId, long ProductId) : IRequest<ResponseModel>;
 
-public sealed class ReserveProductCommandHandler(IInventoryRepository repository, IEventBus events) : IRequestHandler<ReserveProductCommand, ResponseModel>
+public class ReserveProductCommandHandler(IInventoryRepository repository, IEventBus events) : IRequestHandler<ReserveProductCommand, ResponseModel>
 {
     public async Task<ResponseModel> Handle(ReserveProductCommand request, CancellationToken cancellationToken)
     {
         var slot = await repository.GetSlotAsync(request.MachineId, request.ProductId, cancellationToken) ?? throw new InvalidOperationException("Product unavailable for this machine.");
         if (slot.Quantity <= 0) throw new InvalidOperationException("Product is out of stock.");
 
-        var tx = new VendingTransaction
+        var transaction = new VendingTransaction
         {
-            Id = Guid.NewGuid(),
+            Id = LongIdGenerator.NextId(),
             TransactionId = $"VTX-{Guid.NewGuid():N}",
             MachineId = request.MachineId,
             ProductId = request.ProductId,
@@ -29,20 +29,21 @@ public sealed class ReserveProductCommandHandler(IInventoryRepository repository
             CorrelationId = Guid.NewGuid().ToString("N"),
             CreatedAt = DateTimeOffset.UtcNow
         };
-        tx.MoveTo(VendingTransactionStatus.AWAITING_PAYMENT);
 
-        await repository.AddTransactionAsync(tx, cancellationToken);
+        transaction.MoveTo(VendingTransactionStatus.AWAITING_PAYMENT);
+
+        await repository.AddTransactionAsync(transaction, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
-        await events.PublishAsync("payment.requested", tx.CorrelationId, tx.MachineId, new
+        await events.PublishAsync("payment.requested", transaction.CorrelationId, transaction.MachineId, new
         {
-            tx.TransactionId,
-            tx.MachineId,
-            tx.ProductId,
-            tx.SlotNumber,
-            tx.Amount,
-            tx.Currency
+            transaction.TransactionId,
+            transaction.MachineId,
+            transaction.ProductId,
+            transaction.SlotNumber,
+            transaction.Amount,
+            transaction.Currency
         }, cancellationToken);
 
-        return ResponseModel.Ok(tx.ToDto(), "Vending transaction created");
+        return ResponseModel.Ok(transaction.ToDto(), "Product reserved");
     }
 }

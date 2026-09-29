@@ -2,4 +2,6 @@ bin/
 obj/
 node_modules/
 dist/
+.next/
+target/
 .nuget-local/

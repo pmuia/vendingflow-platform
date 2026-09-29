@@ -1,6 +1,6 @@
 # VendingFlow
 
-VendingFlow is a scaled-down local proof of concept for a distributed vending-machine management platform. It demonstrates machine metadata, stock control, simulated payment processing, dispensing, telemetry, RabbitMQ event flow, Redis latest-state caching, and a React operations dashboard.
+VendingFlow is a scaled-down local proof of concept for a distributed vending-machine management platform. It demonstrates machine metadata, stock control, simulated payment processing, dispensing, telemetry, RabbitMQ event flow, Redis latest-state caching, and a Next.js operations dashboard.
 
 ```mermaid
 flowchart LR
@@ -28,8 +28,7 @@ flowchart LR
 - `VendingFlow.MachineSimulator`: .NET 8 worker that simulates four physical machines, heartbeats, dispensing success, and dispensing failure.
 - `VendingFlow.TelemetryService`: Java 17 Spring Boot service that persists heartbeat history in PostgreSQL and caches latest health in Redis.
 - `VendingFlow.ApiGateway`: .NET 8 local gateway routing `/api/machines`, `/api/inventory`, `/api/payments`, and `/api/telemetry`.
-- `VendingFlow.Web`: React/Vite fleet dashboard.
-- `VendingFlow.Infrastructure`: Docker Compose for PostgreSQL, RabbitMQ Management, and Redis.
+- `VendingFlow.Web`: Next.js fleet dashboard.
 
 ## Local URLs
 
@@ -39,38 +38,39 @@ flowchart LR
 - Payment Service Swagger: `http://localhost:5003/swagger`
 - Telemetry Service: `http://localhost:8084/api/telemetry/machines`
 - RabbitMQ Management: `http://localhost:15672` (`vendingflow` / `vendingflow`)
-- React Dashboard: `http://localhost:5173`
+- Next.js Dashboard: `http://localhost:5173`
 
 ## Run
 
-```bash
-cd VendingFlow.Infrastructure
-docker compose up -d
-```
+Start PostgreSQL, RabbitMQ, and Redis locally before running the services.
 
 Run services in separate terminals:
 
 ```bash
-dotnet run --project VendingFlow.MachineService/src/MachineService.Api --urls http://localhost:5001
+dotnet run --project VendingFlow.MachineService/src/Services/MachineService.API --urls http://localhost:5001
 dotnet run --project VendingFlow.InventoryService/src/Services/InventoryService.API --urls http://localhost:5002
-dotnet run --project VendingFlow.PaymentService/src/PaymentService.Api --urls http://localhost:5003
+dotnet run --project VendingFlow.PaymentService/src/Services/PaymentService.API --urls http://localhost:5003
 dotnet run --project VendingFlow.ApiGateway --urls http://localhost:5000
 dotnet run --project VendingFlow.MachineSimulator
 cd VendingFlow.TelemetryService && mvn spring-boot:run
 cd VendingFlow.Web && npm install && npm run dev
 ```
 
-Inventory Service follows the same generic command endpoint style as the local approval workflow service. Use `POST /api/inventory` with a `service` name and `data` payload:
+Machine and Inventory services use the same generic command endpoint style as the local approval workflow service.
 
 ```json
-{ "service": "getProducts", "data": {} }
+{ "service": "getMachines", "data": {} }
+```
+
+```json
+{ "service": "registerMachine", "data": { "machineCode": "VM-005", "name": "Demo Machine", "location": "Nairobi" } }
 ```
 
 ```json
 { "service": "reserveProduct", "data": { "machineId": "VM-001", "productId": "PRODUCT_GUID" } }
 ```
 
-The .NET services use `EnsureCreated` for the POC seed path so the demo can reset quickly. Telemetry uses Flyway migration `V1__telemetry.sql`.
+Telemetry uses Flyway migration `V1__telemetry.sql`.
 
 ## Demo Scenarios
 

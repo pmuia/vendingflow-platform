@@ -7,13 +7,13 @@ using MediatR;
 namespace InventoryService.Application.Services.InventoryManagement.Queries;
 
 [CommandName("getMachineInventory")]
-public sealed record GetMachineInventoryQuery(string MachineId) : IRequest<ResponseModel>;
+public record GetMachineInventoryQuery(string MachineId) : IRequest<ResponseModel>;
 
-public sealed class GetMachineInventoryQueryHandler(IInventoryRepository repository) : IRequestHandler<GetMachineInventoryQuery, ResponseModel>
+public class GetMachineInventoryQueryHandler(IInventoryRepository repository) : IRequestHandler<GetMachineInventoryQuery, ResponseModel>
 {
     public async Task<ResponseModel> Handle(GetMachineInventoryQuery request, CancellationToken cancellationToken)
     {
-        var inventory = (await repository.GetInventoryAsync(request.MachineId, cancellationToken)).Select(i => i.ToDto()).ToList();
-        return ResponseModel.Ok(inventory);
+        var inventory = await repository.GetInventoryAsync(request.MachineId, cancellationToken);
+        return ResponseModel.Ok(inventory.Select(item => item.ToDto()).ToList());
     }
 }

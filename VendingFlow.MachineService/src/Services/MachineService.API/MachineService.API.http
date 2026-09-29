@@ -1,0 +1,12 @@
+@MachineService_API_HostAddress = http://localhost:5001
+
+POST {{MachineService_API_HostAddress}}/api/machines
+Content-Type: application/json
+Accept: application/json
+
+{
+  "service": "getMachines",
+  "data": {}
+}
+
+###

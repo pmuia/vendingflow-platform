@@ -3,35 +3,41 @@ using InventoryService.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production";
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddJsonFile($"appsettings.{environment}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables()
     .Build();
 
+builder.Configuration.AddConfiguration(configuration);
+
 builder.Services.AddControllers();
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", policy => policy
-        .WithOrigins("http://localhost:5173", "http://localhost:3000")
-        .AllowAnyHeader()
-        .AllowAnyMethod());
-});
+builder.Services.AddCors();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddInfrastructure(configuration);
-builder.Services.AddApplication();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
+builder.Services.AddInfrastructure(configuration);
+builder.Services.AddApplication();
 
 var app = builder.Build();
 
-await InventorySeed.EnsureSeededAsync(app.Services);
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseCors("AllowFrontend");
-app.MapHealthChecks("/health");
+app.UseCors(policy => policy
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowAnyOrigin());
+
+app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
+
+await InventorySeed.EnsureSeededAsync(app.Services);
 
 app.Run();

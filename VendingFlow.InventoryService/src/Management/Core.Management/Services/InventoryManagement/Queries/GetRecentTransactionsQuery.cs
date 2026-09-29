@@ -7,13 +7,13 @@ using MediatR;
 namespace InventoryService.Application.Services.InventoryManagement.Queries;
 
 [CommandName("getRecentTransactions")]
-public sealed record GetRecentTransactionsQuery : IRequest<ResponseModel>;
+public record GetRecentTransactionsQuery : IRequest<ResponseModel>;
 
-public sealed class GetRecentTransactionsQueryHandler(IInventoryRepository repository) : IRequestHandler<GetRecentTransactionsQuery, ResponseModel>
+public class GetRecentTransactionsQueryHandler(IInventoryRepository repository) : IRequestHandler<GetRecentTransactionsQuery, ResponseModel>
 {
     public async Task<ResponseModel> Handle(GetRecentTransactionsQuery request, CancellationToken cancellationToken)
     {
-        var transactions = (await repository.RecentTransactionsAsync(cancellationToken)).Select(t => t.ToDto()).ToList();
-        return ResponseModel.Ok(transactions);
+        var transactions = await repository.RecentTransactionsAsync(cancellationToken);
+        return ResponseModel.Ok(transactions.Select(transaction => transaction.ToDto()).ToList());
     }
 }

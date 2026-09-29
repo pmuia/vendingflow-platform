@@ -1,0 +1,9 @@
+@PaymentService_API_HostAddress = http://localhost:5130
+
+POST {{PaymentService_API_HostAddress}}/api/payments
+Content-Type: application/json
+
+{
+  "service": "getRecentPayments",
+  "data": {}
+}

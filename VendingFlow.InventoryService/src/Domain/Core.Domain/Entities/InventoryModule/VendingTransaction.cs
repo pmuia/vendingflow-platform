@@ -1,16 +1,16 @@
 namespace InventoryService.Domain.Entities.InventoryModule;
 
-public sealed class VendingTransaction
+public class VendingTransaction
 {
-    public Guid Id { get; set; }
-    public string TransactionId { get; set; } = "";
-    public string MachineId { get; set; } = "";
-    public Guid ProductId { get; set; }
+    public long Id { get; set; }
+    public string TransactionId { get; set; } = string.Empty;
+    public string MachineId { get; set; } = string.Empty;
+    public long ProductId { get; set; }
     public int SlotNumber { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = "KES";
     public VendingTransactionStatus Status { get; private set; } = VendingTransactionStatus.CREATED;
-    public string CorrelationId { get; set; } = "";
+    public string CorrelationId { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
 
