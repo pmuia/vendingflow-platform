@@ -2,16 +2,27 @@ using MachineService.Application;
 using MachineService.Domain;
 using MachineService.Infrastructure;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<MachineDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("MachineDb") ??
-                     "Host=localhost;Port=5432;Database=machine_db;Username=vendingflow;Password=vendingflow"));
-builder.Services.AddScoped<IMachineRepository, MachineRepository>();
-builder.Services.AddMediatR(typeof(RegisterMachineHandler).Assembly);
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables()
+    .Build();
+
+builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy => policy
+        .WithOrigins("http://localhost:5173", "http://localhost:3000")
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+});
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddInfrastructure(configuration);
+builder.Services.AddApplication();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks();
 
@@ -21,7 +32,9 @@ await MachineSeed.EnsureSeededAsync(app.Services);
 
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseCors("AllowFrontend");
 app.MapHealthChecks("/health");
+app.MapControllers();
 
 var api = app.MapGroup("/api/machines");
 api.MapGet("/", (IMediator mediator, CancellationToken ct) => mediator.Send(new GetMachinesQuery(), ct));
