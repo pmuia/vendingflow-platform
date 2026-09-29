@@ -8,7 +8,7 @@ using MediatR;
 namespace InventoryService.Application.Services.InventoryManagement.Commands;
 
 [CommandName("reserveProduct")]
-public record ReserveProductCommand(string MachineId, Guid ProductId) : IRequest<ResponseModel>;
+public record ReserveProductCommand(string MachineId, long ProductId) : IRequest<ResponseModel>;
 
 public class ReserveProductCommandHandler(IInventoryRepository repository, IEventBus events) : IRequestHandler<ReserveProductCommand, ResponseModel>
 {
@@ -19,7 +19,7 @@ public class ReserveProductCommandHandler(IInventoryRepository repository, IEven
 
         var transaction = new VendingTransaction
         {
-            Id = Guid.NewGuid(),
+            Id = LongIdGenerator.NextId(),
             TransactionId = $"VTX-{Guid.NewGuid():N}",
             MachineId = request.MachineId,
             ProductId = request.ProductId,

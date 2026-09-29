@@ -20,7 +20,7 @@ public class RegisterMachineCommandHandler(IMachineRepository repository) : IReq
         var now = DateTimeOffset.UtcNow;
         var machine = new Machine
         {
-            Id = Guid.NewGuid(),
+            Id = LongIdGenerator.NextId(),
             MachineCode = request.MachineCode,
             Name = request.Name,
             Location = request.Location,

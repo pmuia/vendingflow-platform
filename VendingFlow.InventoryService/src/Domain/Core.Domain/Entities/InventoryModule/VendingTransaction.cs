@@ -2,10 +2,10 @@ namespace InventoryService.Domain.Entities.InventoryModule;
 
 public class VendingTransaction
 {
-    public Guid Id { get; set; }
+    public long Id { get; set; }
     public string TransactionId { get; set; } = string.Empty;
     public string MachineId { get; set; } = string.Empty;
-    public Guid ProductId { get; set; }
+    public long ProductId { get; set; }
     public int SlotNumber { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = "KES";

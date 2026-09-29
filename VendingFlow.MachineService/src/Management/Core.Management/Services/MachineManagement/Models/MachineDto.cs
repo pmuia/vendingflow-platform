@@ -2,7 +2,7 @@ using MachineService.Domain.Entities.MachineModule;
 
 namespace MachineService.Application.Services.MachineManagement.Models;
 
-public record MachineDto(Guid Id, string MachineCode, string Name, string Location, string Status, DateTimeOffset? LastHeartbeatAt, bool IsActive);
+public record MachineDto(long Id, string MachineCode, string Name, string Location, string Status, DateTimeOffset? LastHeartbeatAt, bool IsActive);
 
 public static class MachineMapping
 {

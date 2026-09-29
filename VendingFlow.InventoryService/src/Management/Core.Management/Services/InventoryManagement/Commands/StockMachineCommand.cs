@@ -7,7 +7,7 @@ using MediatR;
 namespace InventoryService.Application.Services.InventoryManagement.Commands;
 
 [CommandName("stockMachine")]
-public record StockMachineCommand(string MachineId, Guid ProductId, int Quantity) : IRequest<ResponseModel>;
+public record StockMachineCommand(string MachineId, long ProductId, int Quantity) : IRequest<ResponseModel>;
 
 public class StockMachineCommandHandler(IInventoryRepository repository, IEventBus events) : IRequestHandler<StockMachineCommand, ResponseModel>
 {

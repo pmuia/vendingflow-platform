@@ -2,7 +2,7 @@ namespace MachineService.Domain.Entities.MachineModule;
 
 public class Machine
 {
-    public Guid Id { get; set; }
+    public long Id { get; set; }
     public string MachineCode { get; set; } = "";
     public string Name { get; set; } = "";
     public string Location { get; set; } = "";

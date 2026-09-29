@@ -7,7 +7,7 @@ using MediatR;
 namespace MachineService.Application.Services.MachineManagement.Commands;
 
 [CommandName("updateMachine")]
-public record UpdateMachineCommand(Guid Id, string Name, string Location, bool IsActive) : IRequest<ResponseModel>;
+public record UpdateMachineCommand(long Id, string Name, string Location, bool IsActive) : IRequest<ResponseModel>;
 
 public class UpdateMachineCommandHandler(IMachineRepository repository) : IRequestHandler<UpdateMachineCommand, ResponseModel>
 {

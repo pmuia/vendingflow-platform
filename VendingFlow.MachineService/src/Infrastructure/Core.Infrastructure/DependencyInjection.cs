@@ -1,4 +1,5 @@
 using MachineService.Application.Interfaces;
+using MachineService.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,7 @@ public static class DependencyInjection
 
         services.AddMemoryCache();
         services.AddScoped<IMachineRepository, MachineRepository>();
+        services.AddScoped<IConnection>(_ => new Connection(dbConn));
         return services;
     }
 }

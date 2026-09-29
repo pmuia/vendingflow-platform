@@ -1,44 +1,13 @@
 using MachineService.Application.Interfaces;
+using MachineService.Infrastructure.Database;
 using MachineService.Domain.Entities.MachineModule;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MachineService.Infrastructure;
 
-public class MachineDbContext(DbContextOptions<MachineDbContext> options) : DbContext(options)
-{
-    public DbSet<Machine> Machines => Set<Machine>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Machine>(entity =>
-        {
-            entity.HasKey(m => m.Id);
-            entity.HasIndex(m => m.MachineCode).IsUnique();
-            entity.Property(m => m.MachineCode).HasMaxLength(32).IsRequired();
-            entity.Property(m => m.Name).HasMaxLength(120).IsRequired();
-            entity.Property(m => m.Location).HasMaxLength(200).IsRequired();
-            entity.Property(m => m.Status).HasConversion<string>().HasMaxLength(32);
-        });
-    }
-}
-
-public class MachineDbContextFactory : IDesignTimeDbContextFactory<MachineDbContext>
-{
-    public MachineDbContext CreateDbContext(string[] args)
-    {
-        var options = new DbContextOptionsBuilder<MachineDbContext>()
-            .UseNpgsql("Host=localhost;Port=5432;Database=MachineServicedb;Username=postgres;Password=H@rd2Cr@k!!pmuia;")
-            .Options;
-
-        return new MachineDbContext(options);
-    }
-}
-
 public class MachineRepository(MachineDbContext db) : IMachineRepository
 {
-    public Task<Machine?> GetByIdAsync(Guid id, CancellationToken ct) => db.Machines.FirstOrDefaultAsync(m => m.Id == id, ct);
+    public Task<Machine?> GetByIdAsync(long id, CancellationToken ct) => db.Machines.FirstOrDefaultAsync(m => m.Id == id, ct);
     public Task<Machine?> GetByCodeAsync(string code, CancellationToken ct) => db.Machines.FirstOrDefaultAsync(m => m.MachineCode == code, ct);
     public async Task<IReadOnlyList<Machine>> ListAsync(CancellationToken ct) => await db.Machines.OrderBy(m => m.MachineCode).ToListAsync(ct);
     public async Task AddAsync(Machine machine, CancellationToken ct) => await db.Machines.AddAsync(machine, ct);
@@ -65,7 +34,7 @@ public static class MachineSeed
 
     private static Machine Seed(string code, string name, string location, MachineStatus status, DateTimeOffset now) => new()
     {
-        Id = Guid.NewGuid(),
+        Id = LongIdGenerator.NextId(),
         MachineCode = code,
         Name = name,
         Location = location,

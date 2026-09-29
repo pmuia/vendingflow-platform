@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using InventoryService.Application.Interfaces;
 using InventoryService.Application.Services.InventoryManagement.Models;
+using InventoryService.Infrastructure.Database;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -10,40 +11,6 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace InventoryService.Infrastructure;
-
-public class InventoryDbContext(DbContextOptions<InventoryDbContext> options) : DbContext(options)
-{
-    public DbSet<Product> Products => Set<Product>();
-    public DbSet<MachineInventory> MachineInventories => Set<MachineInventory>();
-    public DbSet<VendingTransaction> VendingTransactions => Set<VendingTransaction>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.HasDefaultSchema("inventoryservice");
-
-        modelBuilder.Entity<Product>(entity =>
-        {
-            entity.HasKey(product => product.Id);
-            entity.HasIndex(product => product.ProductCode).IsUnique();
-            entity.Property(product => product.Price).HasPrecision(12, 2);
-        });
-
-        modelBuilder.Entity<MachineInventory>(entity =>
-        {
-            entity.HasKey(inventory => inventory.Id);
-            entity.HasIndex(inventory => new { inventory.MachineId, inventory.SlotNumber }).IsUnique();
-            entity.HasOne(inventory => inventory.Product).WithMany().HasForeignKey(inventory => inventory.ProductId);
-        });
-
-        modelBuilder.Entity<VendingTransaction>(entity =>
-        {
-            entity.HasKey(transaction => transaction.Id);
-            entity.HasIndex(transaction => transaction.TransactionId).IsUnique();
-            entity.Property(transaction => transaction.Amount).HasPrecision(12, 2);
-            entity.Property(transaction => transaction.Status).HasConversion<string>().HasMaxLength(32);
-        });
-    }
-}
 
 public class InventoryRepository(InventoryDbContext db) : IInventoryRepository
 {
@@ -55,7 +22,7 @@ public class InventoryRepository(InventoryDbContext db) : IInventoryRepository
         .OrderBy(inventory => inventory.SlotNumber)
         .ToListAsync(ct);
 
-    public Task<MachineInventory?> GetSlotAsync(string machineId, Guid productId, CancellationToken ct) => db.MachineInventories
+    public Task<MachineInventory?> GetSlotAsync(string machineId, long productId, CancellationToken ct) => db.MachineInventories
         .Include(inventory => inventory.Product)
         .FirstOrDefaultAsync(inventory => inventory.MachineId == machineId && inventory.ProductId == productId, ct);
 
@@ -232,7 +199,7 @@ public static class InventorySeed
 
         var products = names.Select((name, index) => new Product
         {
-            Id = Guid.NewGuid(),
+            Id = LongIdGenerator.NextId(),
             ProductCode = $"JCE-{index + 1:000}",
             Name = name,
             Description = $"{name} in a chilled 350ml bottle",
@@ -253,7 +220,7 @@ public static class InventorySeed
             {
                 db.MachineInventories.Add(new MachineInventory
                 {
-                    Id = Guid.NewGuid(),
+                    Id = LongIdGenerator.NextId(),
                     MachineId = machine,
                     ProductId = product.Id,
                     SlotNumber = slot++,

@@ -1,5 +1,6 @@
 using System.Reflection;
 using InventoryService.Application.Interfaces;
+using InventoryService.Infrastructure.Database;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -26,6 +27,7 @@ public static class DependencyInjection
 
         services.Configure<RabbitOptions>(configuration.GetSection("RabbitMq"));
         services.AddScoped<IInventoryRepository, InventoryRepository>();
+        services.AddScoped<IConnection>(_ => new Connection(dbConn));
         services.AddSingleton<IEventBus, RabbitEventBus>();
         services.AddHostedService<InventoryEventConsumer>();
         return services;

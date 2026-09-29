@@ -2,11 +2,11 @@ using InventoryService.Domain.Entities.InventoryModule;
 
 namespace InventoryService.Application.Services.InventoryManagement.Models;
 
-public record ProductDto(Guid Id, string ProductCode, string Name, decimal Price, string Currency);
+public record ProductDto(long Id, string ProductCode, string Name, decimal Price, string Currency);
 
-public record InventoryDto(string MachineId, Guid ProductId, string ProductName, int SlotNumber, int Quantity, int Capacity, int LowStockThreshold);
+public record InventoryDto(string MachineId, long ProductId, string ProductName, int SlotNumber, int Quantity, int Capacity, int LowStockThreshold);
 
-public record TransactionDto(string TransactionId, string MachineId, Guid ProductId, int SlotNumber, decimal Amount, string Currency, string Status, string CorrelationId);
+public record TransactionDto(string TransactionId, string MachineId, long ProductId, int SlotNumber, decimal Amount, string Currency, string Status, string CorrelationId);
 
 public static class InventoryMapping
 {
