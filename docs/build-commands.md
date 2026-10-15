@@ -101,7 +101,7 @@ Run each service in a separate terminal.
 ### API Gateway
 
 ```bash
-dotnet run --project VendingFlow.ApiGateway/VendingFlow.ApiGateway.csproj --urls http://localhost:5000
+dotnet run --project VendingFlow.ApiGateway/VendingFlow.ApiGateway.csproj --urls http://localhost:5050
 ```
 
 ### Machine Service
@@ -152,5 +152,12 @@ http://localhost:5173
 The API Gateway runs at:
 
 ```text
-http://localhost:5000
+http://localhost:5050
 ```
+
+
+➜  MachineService.API git:(feature/database-migrations) ✗ dotnet ef migrations add Initial 
+  --project src/Infrastrcuture/Core.Infrastructure/Core.Infrastructure.csproj \
+  --startup-project src/Services/MachineService.API/MachineService.API.csproj \
+  --context ApplicationDbContext \
+  --output-dir Migrations

@@ -30,8 +30,8 @@ public class RabbitOptions
 {
     public string HostName { get; set; } = "localhost";
     public int Port { get; set; } = 5672;
-    public string UserName { get; set; } = "vendingflow";
-    public string Password { get; set; } = "vendingflow";
+    public string UserName { get; set; } = "sa";
+    public string Password { get; set; } = "Tolulope890@";
     public string Exchange { get; set; } = "vendingflow.events";
 }
 
@@ -120,6 +120,12 @@ public class PaymentEventConsumer(IServiceProvider services, IOptions<RabbitOpti
         var amount = payload.GetProperty("amount").GetDecimal();
         var currency = payload.GetProperty("currency").GetString()!;
         var type = eventType == "payment.refund.requested" ? TransactionType.REFUND : TransactionType.PAYMENT;
+        var paymentMethod = payload.TryGetProperty("paymentMethod", out var paymentMethodValue)
+            ? paymentMethodValue.GetString() ?? "MPESA"
+            : type == TransactionType.REFUND ? "REFUND" : "MPESA";
+        var customerPhone = payload.TryGetProperty("customerPhone", out var phoneValue)
+            ? phoneValue.GetString() ?? string.Empty
+            : string.Empty;
 
         using var scope = services.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<IPaymentRepository>();
@@ -142,6 +148,8 @@ public class PaymentEventConsumer(IServiceProvider services, IOptions<RabbitOpti
             TransactionCode = type == TransactionType.REFUND ? TransactionCode.VEND_REFUND : TransactionCode.VEND_PAYMENT,
             Amount = amount,
             Currency = currency,
+            PaymentMethod = paymentMethod,
+            CustomerPhone = customerPhone,
             Status = PaymentStatus.PROCESSING,
             ProviderReference = $"SIM-{Guid.NewGuid():N}",
             CorrelationId = correlationId,
@@ -155,15 +163,27 @@ public class PaymentEventConsumer(IServiceProvider services, IOptions<RabbitOpti
             ProcessedAt = DateTimeOffset.UtcNow
         };
 
+        await repository.AddAsync(transaction, ct);
+        await repository.SaveChangesAsync(ct);
+
+        if (type == TransactionType.PAYMENT)
+        {
+            if (paymentMethod.Equals("MPESA", StringComparison.OrdinalIgnoreCase))
+                logger.LogInformation("Dummy STK push sent Phone={Phone} Amount={Amount} Currency={Currency} TransactionId={TransactionId}", customerPhone, amount, currency, vendingTransactionId);
+
+            await Task.Delay(paymentMethod.Equals("MPESA", StringComparison.OrdinalIgnoreCase)
+                ? TimeSpan.FromSeconds(2)
+                : TimeSpan.FromSeconds(1), ct);
+        }
+
         transaction.Status = type == TransactionType.REFUND ? PaymentStatus.REFUNDED : PaymentStatus.CONFIRMED;
         transaction.CompletedAt = DateTimeOffset.UtcNow;
 
-        await repository.AddAsync(transaction, ct);
         await repository.SaveChangesAsync(ct);
 
         var published = type == TransactionType.REFUND ? "payment.refunded" : "payment.confirmed";
         logger.LogInformation("{EventType} TransactionId={TransactionId} CorrelationId={CorrelationId} MachineId={MachineId}", published, vendingTransactionId, correlationId, machineId);
-        await bus.PublishAsync(published, correlationId, machineId, new { transactionId = vendingTransactionId, paymentTransactionId = transaction.PaymentTransactionCode, machineId, amount, currency }, ct);
+        await bus.PublishAsync(published, correlationId, machineId, new { transactionId = vendingTransactionId, paymentTransactionId = transaction.PaymentTransactionCode, machineId, amount, currency, paymentMethod, customerPhone }, ct);
     }
 }
 

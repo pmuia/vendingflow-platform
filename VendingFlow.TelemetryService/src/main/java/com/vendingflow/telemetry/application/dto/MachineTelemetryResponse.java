@@ -3,13 +3,14 @@ package com.vendingflow.telemetry.application.dto;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
+import com.vendingflow.telemetry.domain.enums.DoorStatus;
 import com.vendingflow.telemetry.domain.enums.MachineHealthState;
 import com.vendingflow.telemetry.domain.enums.TelemetryComponentStatus;
 import com.vendingflow.telemetry.domain.model.MachineTelemetry;
 
 public record MachineTelemetryResponse(Long machineTelemetryId, String machineId, OffsetDateTime recordedAt,
 		BigDecimal temperature, Integer networkStrength, TelemetryComponentStatus cashModuleStatus,
-		TelemetryComponentStatus dispenserStatus, TelemetryComponentStatus doorStatus, MachineHealthState healthState,
+		TelemetryComponentStatus dispenserStatus, DoorStatus doorStatus, MachineHealthState healthState,
 		String softwareVersion) {
 
 	public static MachineTelemetryResponse from(MachineTelemetry telemetry) {

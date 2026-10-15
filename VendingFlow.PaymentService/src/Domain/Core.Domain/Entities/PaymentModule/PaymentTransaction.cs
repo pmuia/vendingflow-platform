@@ -10,6 +10,8 @@ public class PaymentTransaction : AuditableEntity
     public TransactionCode TransactionCode { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = "KES";
+    public string PaymentMethod { get; set; } = string.Empty;
+    public string CustomerPhone { get; set; } = string.Empty;
     public PaymentStatus Status { get; set; } = PaymentStatus.PENDING;
     public string ProviderReference { get; set; } = string.Empty;
     public string CorrelationId { get; set; } = string.Empty;

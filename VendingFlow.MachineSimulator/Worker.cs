@@ -19,8 +19,8 @@ public sealed class Worker(ILogger<Worker> logger, IConfiguration configuration)
         {
             HostName = configuration["RabbitMq:HostName"] ?? "localhost",
             Port = int.TryParse(configuration["RabbitMq:Port"], out var port) ? port : 5672,
-            UserName = configuration["RabbitMq:UserName"] ?? "vendingflow",
-            Password = configuration["RabbitMq:Password"] ?? "vendingflow"
+            UserName = configuration["RabbitMq:UserName"] ?? "sa",
+            Password = configuration["RabbitMq:Password"] ?? "Tolulope890@"
         };
 
         var connection = await factory.CreateConnectionAsync(stoppingToken);

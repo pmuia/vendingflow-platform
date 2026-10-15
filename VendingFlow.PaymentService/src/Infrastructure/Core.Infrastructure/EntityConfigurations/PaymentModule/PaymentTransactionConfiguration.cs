@@ -17,5 +17,7 @@ public class PaymentTransactionConfiguration : IEntityTypeConfiguration<PaymentT
         builder.Property(payment => payment.TransactionType).HasConversion<string>().HasMaxLength(32);
         builder.Property(payment => payment.TransactionCode).HasConversion<string>().HasMaxLength(32);
         builder.Property(payment => payment.Status).HasConversion<string>().HasMaxLength(32);
+        builder.Property(payment => payment.PaymentMethod).HasMaxLength(32);
+        builder.Property(payment => payment.CustomerPhone).HasMaxLength(32);
     }
 }

@@ -12,3 +12,10 @@ public enum VendingTransactionStatus
     REFUNDED,
     FAILED
 }
+
+public enum InventoryMovementType
+{
+    STOCK_IN,
+    SALE,
+    ADJUSTMENT
+}
