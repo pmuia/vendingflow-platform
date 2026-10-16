@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 import com.vendingflow.telemetry.application.dto.HeartbeatDto;
+import com.vendingflow.telemetry.domain.enums.DoorStatus;
 import com.vendingflow.telemetry.domain.enums.MachineHealthState;
 import com.vendingflow.telemetry.domain.enums.TelemetryComponentStatus;
 
@@ -45,7 +46,7 @@ public class MachineTelemetry extends AuditableEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "door_status", nullable = false, length = 32)
-	private TelemetryComponentStatus doorStatus;
+	private DoorStatus doorStatus;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "health_state", nullable = false, length = 32)
@@ -59,7 +60,7 @@ public class MachineTelemetry extends AuditableEntity {
 
 	public MachineTelemetry(String machineId, OffsetDateTime recordedAt, BigDecimal temperature, Integer networkStrength,
 			TelemetryComponentStatus cashModuleStatus, TelemetryComponentStatus dispenserStatus,
-			TelemetryComponentStatus doorStatus, String softwareVersion) {
+			DoorStatus doorStatus, String softwareVersion) {
 		validate(machineId, recordedAt, temperature, networkStrength, cashModuleStatus, dispenserStatus, doorStatus,
 				softwareVersion);
 		this.machineId = machineId;
@@ -80,13 +81,13 @@ public class MachineTelemetry extends AuditableEntity {
 				heartbeat.networkStrength(),
 				componentStatus(heartbeat.cashModuleStatus()),
 				componentStatus(heartbeat.dispenserStatus()),
-				componentStatus(heartbeat.doorStatus()),
+				doorStatus(heartbeat.doorStatus()),
 				heartbeat.softwareVersion());
 	}
 
 	private static MachineHealthState resolveHealthState(TelemetryComponentStatus dispenserStatus,
-			TelemetryComponentStatus doorStatus, Integer networkStrength) {
-		if (dispenserStatus == TelemetryComponentStatus.ERROR || doorStatus == TelemetryComponentStatus.ERROR) {
+			DoorStatus doorStatus, Integer networkStrength) {
+		if (dispenserStatus == TelemetryComponentStatus.ERROR || doorStatus != DoorStatus.CLOSED) {
 			return MachineHealthState.DEGRADED;
 		}
 		if (networkStrength != null && networkStrength < 30) {
@@ -102,9 +103,16 @@ public class MachineTelemetry extends AuditableEntity {
 		return TelemetryComponentStatus.valueOf(value.toUpperCase());
 	}
 
+	private static DoorStatus doorStatus(String value) {
+		if (value == null || value.isBlank()) {
+			return DoorStatus.UNKNOWN;
+		}
+		return DoorStatus.valueOf(value.toUpperCase());
+	}
+
 	private static void validate(String machineId, OffsetDateTime recordedAt, BigDecimal temperature,
 			Integer networkStrength, TelemetryComponentStatus cashModuleStatus, TelemetryComponentStatus dispenserStatus,
-			TelemetryComponentStatus doorStatus, String softwareVersion) {
+			DoorStatus doorStatus, String softwareVersion) {
 		if (machineId == null || machineId.isBlank()) {
 			throw new IllegalArgumentException("Machine id is required");
 		}
@@ -153,7 +161,7 @@ public class MachineTelemetry extends AuditableEntity {
 		return dispenserStatus;
 	}
 
-	public TelemetryComponentStatus getDoorStatus() {
+	public DoorStatus getDoorStatus() {
 		return doorStatus;
 	}
 

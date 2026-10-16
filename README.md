@@ -32,25 +32,34 @@ flowchart LR
 
 ## Local URLs
 
-- Gateway: `http://localhost:5000`
+- Gateway: `http://localhost:5050`
 - Machine Service Swagger: `http://localhost:5001/swagger`
 - Inventory Service Swagger: `http://localhost:5002/swagger`
 - Payment Service Swagger: `http://localhost:5003/swagger`
 - Telemetry Service: `http://localhost:8084/api/telemetry/machines`
-- RabbitMQ Management: `http://localhost:15672` (`vendingflow` / `vendingflow`)
+- RabbitMQ Management: `http://localhost:15672` (`sa` / `Tolulope890@`)
 - Next.js Dashboard: `http://localhost:5173`
 
 ## Run
 
 Start PostgreSQL, RabbitMQ, and Redis locally before running the services.
 
-Run services in separate terminals:
+Install the dashboard dependencies once, then launch every application service from the repository root:
+
+```bash
+cd VendingFlow.Web && npm install && cd ..
+./scripts/start-all.sh
+```
+
+The launcher writes separate logs under `.run/logs`, streams them to the terminal, and stops every service when you press `Ctrl+C`. It also warns when PostgreSQL, RabbitMQ, or Redis cannot be reached.
+
+Alternatively, run services in separate terminals:
 
 ```bash
 dotnet run --project VendingFlow.MachineService/src/Services/MachineService.API --urls http://localhost:5001
 dotnet run --project VendingFlow.InventoryService/src/Services/InventoryService.API --urls http://localhost:5002
 dotnet run --project VendingFlow.PaymentService/src/Services/PaymentService.API --urls http://localhost:5003
-dotnet run --project VendingFlow.ApiGateway --urls http://localhost:5000
+dotnet run --project VendingFlow.ApiGateway --urls http://localhost:5050
 dotnet run --project VendingFlow.MachineSimulator
 cd VendingFlow.TelemetryService && mvn spring-boot:run
 cd VendingFlow.Web && npm install && npm run dev

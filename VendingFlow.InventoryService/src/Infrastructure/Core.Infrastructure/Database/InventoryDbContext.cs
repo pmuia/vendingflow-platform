@@ -7,6 +7,7 @@ public class InventoryDbContext(DbContextOptions<InventoryDbContext> options) : 
     public DbSet<Product> Products => Set<Product>();
     public DbSet<MachineInventory> MachineInventories => Set<MachineInventory>();
     public DbSet<VendingTransaction> VendingTransactions => Set<VendingTransaction>();
+    public DbSet<ItemLedgerEntry> ItemLedgerEntries => Set<ItemLedgerEntry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

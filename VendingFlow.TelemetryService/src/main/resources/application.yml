@@ -17,8 +17,8 @@ spring:
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST:localhost}
     port: ${SPRING_RABBITMQ_PORT:5672}
-    username: ${SPRING_RABBITMQ_USERNAME:vendingflow}
-    password: ${SPRING_RABBITMQ_PASSWORD:vendingflow}
+    username: ${SPRING_RABBITMQ_USERNAME:sa}
+    password: ${SPRING_RABBITMQ_PASSWORD:Tolulope890@}
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:localhost}

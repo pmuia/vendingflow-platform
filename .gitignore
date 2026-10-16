@@ -5,3 +5,4 @@ dist/
 .next/
 target/
 .nuget-local/
+.run/

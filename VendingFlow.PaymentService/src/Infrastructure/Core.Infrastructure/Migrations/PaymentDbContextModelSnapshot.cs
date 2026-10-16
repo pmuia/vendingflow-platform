@@ -56,6 +56,11 @@ namespace Core.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("CustomerPhone")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("MachineId")
                         .IsRequired()
                         .HasColumnType("text");
@@ -68,6 +73,11 @@ namespace Core.Infrastructure.Migrations
 
                     b.Property<long>("PartnerId")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("PaymentTransactionCode")
                         .IsRequired()

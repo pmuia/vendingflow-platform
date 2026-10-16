@@ -9,6 +9,8 @@ public interface IInventoryRepository
     Task<MachineInventory?> GetSlotAsync(string machineId, long productId, CancellationToken ct);
     Task<VendingTransaction?> GetTransactionAsync(string transactionId, CancellationToken ct);
     Task<IReadOnlyList<VendingTransaction>> RecentTransactionsAsync(CancellationToken ct);
+    Task<IReadOnlyList<ItemLedgerEntry>> GetItemLedgerAsync(string? machineId, CancellationToken ct);
     Task AddTransactionAsync(VendingTransaction transaction, CancellationToken ct);
+    Task AddLedgerEntryAsync(ItemLedgerEntry entry, CancellationToken ct);
     Task SaveChangesAsync(CancellationToken ct);
 }

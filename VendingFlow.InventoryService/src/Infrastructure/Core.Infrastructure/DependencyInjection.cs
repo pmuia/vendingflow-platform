@@ -27,6 +27,8 @@ public static class DependencyInjection
 
         services.Configure<RabbitOptions>(configuration.GetSection("RabbitMq"));
         services.AddScoped<IInventoryRepository, InventoryRepository>();
+        var telemetryBaseUrl = configuration["TelemetryService:BaseUrl"] ?? "http://localhost:8084";
+        services.AddSingleton<IMachineAvailabilityService>(new TelemetryMachineAvailabilityService(telemetryBaseUrl));
         services.AddScoped<IConnection>(_ => new Connection(dbConn));
         services.AddSingleton<IEventBus, RabbitEventBus>();
         services.AddHostedService<InventoryEventConsumer>();

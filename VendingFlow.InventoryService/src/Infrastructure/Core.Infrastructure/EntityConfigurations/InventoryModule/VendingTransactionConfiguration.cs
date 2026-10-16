@@ -13,5 +13,7 @@ public class VendingTransactionConfiguration : IEntityTypeConfiguration<VendingT
         builder.HasIndex(transaction => transaction.TransactionId).IsUnique();
         builder.Property(transaction => transaction.Amount).HasPrecision(12, 2);
         builder.Property(transaction => transaction.Status).HasConversion<string>().HasMaxLength(32);
+        builder.Property(transaction => transaction.PaymentMethod).HasMaxLength(32);
+        builder.Property(transaction => transaction.CustomerPhone).HasMaxLength(32);
     }
 }

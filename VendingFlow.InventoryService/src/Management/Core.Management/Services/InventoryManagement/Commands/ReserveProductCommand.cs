@@ -8,14 +8,23 @@ using MediatR;
 namespace InventoryService.Application.Services.InventoryManagement.Commands;
 
 [CommandName("reserveProduct")]
-public record ReserveProductCommand(string MachineId, long ProductId) : IRequest<ResponseModel>;
+public record ReserveProductCommand(string MachineId, long ProductId, int Quantity, string PaymentMethod,
+    string CustomerPhone) : IRequest<ResponseModel>;
 
-public class ReserveProductCommandHandler(IInventoryRepository repository, IEventBus events) : IRequestHandler<ReserveProductCommand, ResponseModel>
+public class ReserveProductCommandHandler(IInventoryRepository repository, IEventBus events,
+    IMachineAvailabilityService machineAvailability) : IRequestHandler<ReserveProductCommand, ResponseModel>
 {
     public async Task<ResponseModel> Handle(ReserveProductCommand request, CancellationToken cancellationToken)
     {
+        var availability = await machineAvailability.CheckAsync(request.MachineId, cancellationToken);
+        if (!availability.CanVend) throw new InvalidOperationException(availability.Reason);
+
         var slot = await repository.GetSlotAsync(request.MachineId, request.ProductId, cancellationToken) ?? throw new InvalidOperationException("Product unavailable for this machine.");
-        if (slot.Quantity <= 0) throw new InvalidOperationException("Product is out of stock.");
+        if (request.Quantity <= 0) throw new InvalidOperationException("Quantity must be at least one.");
+        if (request.Quantity > slot.Quantity) throw new InvalidOperationException($"Only {slot.Quantity} items are available.");
+        if (string.IsNullOrWhiteSpace(request.PaymentMethod)) throw new InvalidOperationException("Payment method is required.");
+        if (request.PaymentMethod.Equals("MPESA", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(request.CustomerPhone))
+            throw new InvalidOperationException("Phone number is required for M-Pesa STK Push.");
 
         var transaction = new VendingTransaction
         {
@@ -24,8 +33,11 @@ public class ReserveProductCommandHandler(IInventoryRepository repository, IEven
             MachineId = request.MachineId,
             ProductId = request.ProductId,
             SlotNumber = slot.SlotNumber,
-            Amount = slot.Product.Price,
+            Quantity = request.Quantity,
+            Amount = slot.Product.Price * request.Quantity,
             Currency = slot.Product.Currency,
+            PaymentMethod = request.PaymentMethod.ToUpperInvariant(),
+            CustomerPhone = request.CustomerPhone.Trim(),
             CorrelationId = Guid.NewGuid().ToString("N"),
             CreatedAt = DateTimeOffset.UtcNow
         };
@@ -40,8 +52,11 @@ public class ReserveProductCommandHandler(IInventoryRepository repository, IEven
             transaction.MachineId,
             transaction.ProductId,
             transaction.SlotNumber,
+            transaction.Quantity,
             transaction.Amount,
-            transaction.Currency
+            transaction.Currency,
+            transaction.PaymentMethod,
+            transaction.CustomerPhone
         }, cancellationToken);
 
         return ResponseModel.Ok(transaction.ToDto(), "Product reserved");

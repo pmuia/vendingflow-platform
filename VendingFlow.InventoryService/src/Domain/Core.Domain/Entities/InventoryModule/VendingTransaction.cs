@@ -7,8 +7,11 @@ public class VendingTransaction
     public string MachineId { get; set; } = string.Empty;
     public long ProductId { get; set; }
     public int SlotNumber { get; set; }
+    public int Quantity { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; } = "KES";
+    public string PaymentMethod { get; set; } = string.Empty;
+    public string CustomerPhone { get; set; } = string.Empty;
     public VendingTransactionStatus Status { get; private set; } = VendingTransactionStatus.CREATED;
     public string CorrelationId { get; set; } = string.Empty;
     public DateTimeOffset CreatedAt { get; set; }

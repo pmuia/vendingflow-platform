@@ -33,7 +33,16 @@ public class InventoryRepository(InventoryDbContext db) : IInventoryRepository
         .Take(25)
         .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<ItemLedgerEntry>> GetItemLedgerAsync(string? machineId, CancellationToken ct) => await db.ItemLedgerEntries
+        .Include(entry => entry.Product)
+        .Where(entry => string.IsNullOrWhiteSpace(machineId) || entry.MachineId == machineId)
+        .OrderByDescending(entry => entry.CreatedAt)
+        .Take(100)
+        .ToListAsync(ct);
+
     public async Task AddTransactionAsync(VendingTransaction transaction, CancellationToken ct) => await db.VendingTransactions.AddAsync(transaction, ct);
+
+    public async Task AddLedgerEntryAsync(ItemLedgerEntry entry, CancellationToken ct) => await db.ItemLedgerEntries.AddAsync(entry, ct);
 
     public Task SaveChangesAsync(CancellationToken ct) => db.SaveChangesAsync(ct);
 }
@@ -42,8 +51,8 @@ public class RabbitOptions
 {
     public string HostName { get; set; } = "localhost";
     public int Port { get; set; } = 5672;
-    public string UserName { get; set; } = "vendingflow";
-    public string Password { get; set; } = "vendingflow";
+    public string UserName { get; set; } = "sa";
+    public string Password { get; set; } = "Tolulope890@";
     public string Exchange { get; set; } = "vendingflow.events";
 }
 
@@ -137,7 +146,7 @@ public class InventoryEventConsumer(IServiceProvider services, IOptions<RabbitOp
             transaction.MoveTo(VendingTransactionStatus.DISPENSING);
             await db.SaveChangesAsync(ct);
             logger.LogInformation("Dispense requested TransactionId={TransactionId} CorrelationId={CorrelationId} MachineId={MachineId}", transaction.TransactionId, correlationId, machineId);
-            await bus.PublishAsync("product.dispense.requested", correlationId, machineId, new { transaction.TransactionId, transaction.MachineId, transaction.ProductId, transaction.SlotNumber }, ct);
+            await bus.PublishAsync("product.dispense.requested", correlationId, machineId, new { transaction.TransactionId, transaction.MachineId, transaction.ProductId, transaction.SlotNumber, transaction.Quantity }, ct);
             return;
         }
 
@@ -145,11 +154,25 @@ public class InventoryEventConsumer(IServiceProvider services, IOptions<RabbitOp
         {
             var slot = await db.MachineInventories.Include(inventory => inventory.Product).FirstAsync(inventory => inventory.MachineId == transaction.MachineId && inventory.ProductId == transaction.ProductId, ct);
             var before = slot.Quantity;
-            if (slot.Quantity <= 0) throw new InvalidOperationException("Inventory would become negative.");
+            if (slot.Quantity < transaction.Quantity) throw new InvalidOperationException("Inventory would become negative.");
 
-            slot.Quantity -= 1;
+            slot.Quantity -= transaction.Quantity;
             slot.UpdatedAt = DateTimeOffset.UtcNow;
             transaction.MoveTo(VendingTransactionStatus.COMPLETED);
+            db.ItemLedgerEntries.Add(new ItemLedgerEntry
+            {
+                Id = LongIdGenerator.NextId(),
+                MachineId = transaction.MachineId,
+                ProductId = transaction.ProductId,
+                TransactionId = transaction.TransactionId,
+                MovementType = InventoryMovementType.SALE,
+                QuantityChange = -transaction.Quantity,
+                BalanceAfter = slot.Quantity,
+                UnitPrice = transaction.Amount / transaction.Quantity,
+                TotalAmount = transaction.Amount,
+                Currency = transaction.Currency,
+                CreatedAt = DateTimeOffset.UtcNow
+            });
             await db.SaveChangesAsync(ct);
 
             logger.LogInformation("Inventory reduced from {Before} to {After}; transaction completed TransactionId={TransactionId} CorrelationId={CorrelationId}", before, slot.Quantity, transaction.TransactionId, correlationId);
