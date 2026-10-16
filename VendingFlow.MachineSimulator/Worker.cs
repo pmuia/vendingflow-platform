@@ -8,7 +8,9 @@ namespace VendingFlow.MachineSimulator;
 public sealed class Worker(ILogger<Worker> logger, IConfiguration configuration) : BackgroundService
 {
     private readonly Dictionary<string, bool> _heartbeatsEnabled = new() { ["VM-001"] = true, ["VM-002"] = true, ["VM-003"] = true, ["VM-004"] = true };
-    private bool _vm003Failure = true;
+    private bool _vm003Failure = false;
+
+    private bool _vm002Failure = true;
     private IChannel? _channel;
     private string _exchange = "vendingflow.events";
 
@@ -54,7 +56,7 @@ public sealed class Worker(ILogger<Worker> logger, IConfiguration configuration)
             var payload = envelope.GetProperty("payload");
             var transactionId = payload.GetProperty("transactionId").GetString()!;
             await Task.Delay(1200, ct);
-            var failed = machineId == "VM-003" && _vm003Failure;
+            var failed = machineId == "VM-002" && _vm002Failure;
             var eventType = failed ? "product.dispense.failed" : "product.dispensed";
             logger.LogInformation("{EventType} TransactionId={TransactionId} CorrelationId={CorrelationId} MachineId={MachineId}", eventType, transactionId, correlationId, machineId);
             await PublishAsync(eventType, correlationId, machineId, new { transactionId, machineId, reason = failed ? "SIMULATED_DISPENSER_FAILURE" : null }, ct);
@@ -97,7 +99,7 @@ public sealed class Worker(ILogger<Worker> logger, IConfiguration configuration)
         temperature = machineId == "VM-003" ? 8.4 : 4.3,
         networkStrength = machineId == "VM-004" ? 67 : 88,
         cashModuleStatus = "OK",
-        dispenserStatus = machineId == "VM-003" && _vm003Failure ? "ERROR" : "OK",
+        dispenserStatus = machineId == "VM-002" && _vm002Failure ? "ERROR" : "OK",
         doorStatus = "CLOSED",
         softwareVersion = "1.0.0"
     };
