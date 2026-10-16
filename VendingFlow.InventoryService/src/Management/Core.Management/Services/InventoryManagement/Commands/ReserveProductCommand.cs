@@ -11,10 +11,14 @@ namespace InventoryService.Application.Services.InventoryManagement.Commands;
 public record ReserveProductCommand(string MachineId, long ProductId, int Quantity, string PaymentMethod,
     string CustomerPhone) : IRequest<ResponseModel>;
 
-public class ReserveProductCommandHandler(IInventoryRepository repository, IEventBus events) : IRequestHandler<ReserveProductCommand, ResponseModel>
+public class ReserveProductCommandHandler(IInventoryRepository repository, IEventBus events,
+    IMachineAvailabilityService machineAvailability) : IRequestHandler<ReserveProductCommand, ResponseModel>
 {
     public async Task<ResponseModel> Handle(ReserveProductCommand request, CancellationToken cancellationToken)
     {
+        var availability = await machineAvailability.CheckAsync(request.MachineId, cancellationToken);
+        if (!availability.CanVend) throw new InvalidOperationException(availability.Reason);
+
         var slot = await repository.GetSlotAsync(request.MachineId, request.ProductId, cancellationToken) ?? throw new InvalidOperationException("Product unavailable for this machine.");
         if (request.Quantity <= 0) throw new InvalidOperationException("Quantity must be at least one.");
         if (request.Quantity > slot.Quantity) throw new InvalidOperationException($"Only {slot.Quantity} items are available.");

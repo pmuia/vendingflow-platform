@@ -7,9 +7,16 @@ namespace InventoryService.API.Controllers;
 public class InventoryController : ApiBaseController
 {
     [HttpPost]
-    public async Task<ResponseModel> Execute([FromBody] GenericRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<ResponseModel>> Execute([FromBody] GenericRequest request, CancellationToken cancellationToken)
     {
-        var command = CommandFactory.Create(request);
-        return await Mediator.Send(command, cancellationToken);
+        try
+        {
+            var command = CommandFactory.Create(request);
+            return Ok(await Mediator.Send(command, cancellationToken));
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(ResponseModel.Fail(exception.Message));
+        }
     }
 }

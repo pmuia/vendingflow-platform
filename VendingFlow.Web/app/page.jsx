@@ -37,13 +37,25 @@ async function execute(path, service, data = {}) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ service, data })
   });
-  if (!response.ok) throw new Error('The service could not complete this request.');
-  const payload = await response.json();
-  if (payload?.success === false) throw new Error(payload.message || 'The request failed.');
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || payload?.success === false) {
+    throw new Error(payload?.message || 'The service could not complete this request.');
+  }
   return payload?.data ?? payload;
 }
 
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+function getVendingUnavailableReason(health) {
+  if (!health?.state) return 'Machine health is unavailable';
+  if (health.state === 'OFFLINE') return 'Machine is offline';
+  if (health.doorStatus !== 'CLOSED') return 'Machine door is not closed';
+  if (!health.dispenserStatus || ['ERROR', 'UNKNOWN'].includes(health.dispenserStatus)) {
+    return 'Dispenser is unavailable';
+  }
+  if (!['ONLINE', 'DEGRADED'].includes(health.state)) return `Machine state is ${health.state}`;
+  return '';
+}
 
 export default function DashboardPage() {
   const [machines, setMachines] = useState([]);
@@ -102,6 +114,9 @@ export default function DashboardPage() {
   }, [health, payments]);
 
   function openPurchase(machineId) {
+    const machineHealth = healthByMachine[machineId];
+    const unavailableReason = getVendingUnavailableReason(machineHealth);
+    if (unavailableReason) return;
     const slot = (inventory[machineId] || []).find((item) => item.productId === mango?.id);
     if (!mango || !slot) return;
     setPurchase({
@@ -246,6 +261,7 @@ export default function DashboardPage() {
                 const h = healthByMachine[machine.machineCode] || {};
                 const stock = (inventory[machine.machineCode] || []).reduce((sum, item) => sum + item.quantity, 0);
                 const mangoSlot = (inventory[machine.machineCode] || []).find((item) => item.productId === mango?.id);
+                const unavailableReason = getVendingUnavailableReason(h);
                 return (
                   <tr
                     key={machine.machineCode}
@@ -268,13 +284,14 @@ export default function DashboardPage() {
                         onClick={(event) => event.stopPropagation()}
                       >Telemetry</Link>
                       <button
-                        disabled={!mangoSlot || mangoSlot.quantity < 1}
+                        disabled={!mangoSlot || mangoSlot.quantity < 1 || Boolean(unavailableReason)}
+                        title={unavailableReason || ''}
                         onClick={(event) => {
                           event.stopPropagation();
                           openPurchase(machine.machineCode);
                         }}
                       >
-                        {mangoSlot?.quantity > 0 ? 'Buy Mango' : 'Sold out'}
+                        {!mangoSlot || mangoSlot.quantity < 1 ? 'Sold out' : unavailableReason ? 'Unavailable' : 'Buy Mango'}
                       </button>
                     </div></td>
                   </tr>
